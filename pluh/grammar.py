@@ -5,7 +5,6 @@ from lark import Lark, ParseTree
 
 GRAMMAR = r"""
 %import common.CNAME
-%import common.SIGNED_FLOAT
 %import common.ESCAPED_STRING
 %import common.SIGNED_INT
 %import common.INT
@@ -18,9 +17,9 @@ GRAMMAR = r"""
 
 decls                   : decl ( ";" decl )* [ ";" ]
 
-?decl                   : "type" [ "rec" ] CNAME              "=" decl_type_variant_cases -> decl_type_variant
-                        | "type"           CNAME              "=" type                    -> decl_type
-                        | "def"  [ "rec" ] CNAME [ ":" type ] "=" value                   -> def
+?decl                   : "type" [ rec ] CNAME              "=" decl_type_variant_cases   -> decl_type_variant
+                        | "type"         CNAME              "=" type                      -> decl_type
+                        | "def"  [ rec ] CNAME [ ":" type ] "=" value                     -> def
                         | value
 
 decl_type_variant_cases : decl_type_variant_case+
@@ -31,7 +30,7 @@ decl_type_variant_case  : "|" CNAME [ "of" type ]
 # Value                                                                        #
 ################################################################################
 
-?value                  : "let" [ "rec" ] CNAME [ ":" type ] "=" value "in" value         -> let
+?value                  : "let" [ rec ] CNAME [ ":" type ] "=" value "in" value           -> let
                         | match
 
 ?match                  : "match" match "with" match_cases
@@ -44,25 +43,25 @@ match_case              : "|" CNAME [ "of" CNAME ] "->" match
 ?if                     : "if" if "then" if "else" if
                         | fun
 
-?fun                    : "fun" CNAME [ ":" type ] "=" fun
+?fun                    : "fun" CNAME [ ":" type ] "." fun
                         | app
 
-?app                    : "fix" app                                                       -> fix 
-                        | app   proj
-                        |       proj
+?app                    : app proj
+                        |     proj
 
 ?proj                   : atom "[" INT "]"
                         | atom
 
-?atom                   : "true"                                                          -> lbool
-                        | "false"                                                         -> lbool
+?atom                   : "true"                                                          -> ltrue
+                        | "false"                                                         -> lfalse
                         | ESCAPED_STRING                                                  -> lstr
-                        | SIGNED_FLOAT                                                    -> lfloat
                         | SIGNED_INT                                                      -> lint
                         | CNAME                                                           -> lvariable
-                        | "(" value ( "," value )+ ")"                                    -> lprod
+                        | "(" value ( "," value )+ ")"                                    -> ltuple
                         | "(" ")"                                                         -> lunit
                         | "(" value ")"
+
+rec                     : "rec"
 
 ################################################################################
 # Type                                                                         #
@@ -77,14 +76,19 @@ match_case              : "|" CNAME [ "of" CNAME ] "->" match
 
 ?type_atom              : "bool"                                                          -> tbool
                         | "int"                                                           -> tint
-                        | "float"                                                         -> tfloat
                         | "str"                                                           -> tstr
+                        | "unit"                                                          -> tunit
+                        | CNAME                                                           -> tvariable
                         | "(" type ")"
 """
 
 
 def parse_source_text(text: str) -> ParseTree:
-    return Lark(GRAMMAR, start="decls").parse(text)
+    try:
+        return Lark(GRAMMAR, start="decls").parse(text)
+    except Exception as e:
+        print("pluh: error: exception while parsing input: " + str(e))
+        sys.exit(1)
 
 
 if __name__ == "__main__":

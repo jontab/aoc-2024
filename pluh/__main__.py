@@ -1,13 +1,16 @@
 import argparse
 import sys
+from pprint import pprint
 
 from .grammar import parse_source_text
+from .node import convert_to_node_tree
+from .pre import rewrite_syntactic_sugar
 
 
 def make_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser("pluh")
     parser.add_argument("file")
-    parser.add_argument("-o", "--out")
+    parser.add_argument("-o", "--out", default="a.out")
     return parser
 
 
@@ -23,8 +26,13 @@ def get_source_text(source_path: str) -> str:
 def main() -> None:
     args = make_argument_parser().parse_args()
     text = get_source_text(args.file)
-    tree = parse_source_text(text)
-    print("Tree:", tree)
+
+    lark_tree = parse_source_text(text)
+    tree = convert_to_node_tree(lark_tree)
+    tree = rewrite_syntactic_sugar(tree)
+
+    with open(args.out, "w") as file:
+        pprint(tree, stream=file)
 
 
 if __name__ == "__main__":

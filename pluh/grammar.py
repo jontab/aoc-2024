@@ -15,41 +15,42 @@ GRAMMAR = r"""
 # Declarations                                                                 #
 ################################################################################
 
-decls                   : decl ( ";" decl )* [ ";" ]
+?decls                  : decl ( ";" decl )* [ ";" ]                                      -> decls
 
-?decl                   : "type" [ rec ] CNAME              "=" decl_type_variant_cases   -> decl_type_variant
+?decl                   : "type"         CNAME              "=" decl_type_variant_cases   -> decl_type_variant
                         | "type"         CNAME              "=" type                      -> decl_type
                         | "def"  [ rec ] CNAME [ ":" type ] "=" value                     -> def
                         | value
 
-decl_type_variant_cases : decl_type_variant_case+
+decl_type_variant_cases : decl_type_variant_case+                                         -> decl_type_variant_cases
 
-decl_type_variant_case  : "|" CNAME [ "of" type ]
+decl_type_variant_case  : "|" CNAME [ "of" type ]                                         -> decl_type_variant_case
 
 ################################################################################
 # Value                                                                        #
 ################################################################################
 
-?value                  : "let" [ rec ] CNAME [ ":" type ] "=" value "in" value           -> let
+?value                  : value ( ";" value )+                                            -> seq
+                        | "let" [ rec ] CNAME [ ":" type ] "=" value "in" value           -> let
                         | match
 
-?match                  : "match" match "with" match_cases
+?match                  : "match" match "with" match_cases                                -> match
                         | if
 
-match_cases             : match_case+
+match_cases             : match_case+                                                     -> match_cases
 
-match_case              : "|" CNAME [ "of" CNAME ] "->" match
+match_case              : "|" CNAME [ "of" CNAME ] "->" match                             -> match_case
 
-?if                     : "if" if "then" if "else" if
+?if                     : "if" if "then" if "else" if                                     -> if
                         | fun
 
-?fun                    : "fun" CNAME [ ":" type ] "." fun
+?fun                    : "fun" CNAME [ ":" type ] "." fun                                -> fun
                         | app
 
-?app                    : app proj
+?app                    : app proj                                                        -> app
                         |     proj
 
-?proj                   : atom "[" INT "]"
+?proj                   : atom "[" INT "]"                                                -> proj
                         | atom
 
 ?atom                   : "true"                                                          -> ltrue
@@ -69,10 +70,11 @@ rec                     : "rec"
 
 ?type                   : type_arrow
 
-?type_arrow             : type_prod "->" type_arrow
+?type_arrow             : type_prod "->" type_arrow                                       -> tarrow
                         | type_prod
 
-?type_prod              : type_atom ( "*" type_atom )*
+?type_prod              : type_atom "*" type_atom                                         -> tprod
+                        | type_atom
 
 ?type_atom              : "bool"                                                          -> tbool
                         | "int"                                                           -> tint

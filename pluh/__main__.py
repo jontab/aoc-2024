@@ -1,10 +1,8 @@
 import argparse
 import sys
-from pprint import pprint
 
 from .grammar import parse_source_text
-from .node import convert_to_node_tree
-from .pre import rewrite_syntactic_sugar
+from .pre import *
 
 
 def make_argument_parser() -> argparse.ArgumentParser:
@@ -27,12 +25,11 @@ def main() -> None:
     args = make_argument_parser().parse_args()
     text = get_source_text(args.file)
 
-    lark_tree = parse_source_text(text)
-    tree = convert_to_node_tree(lark_tree)
-    tree = rewrite_syntactic_sugar(tree)
+    tree = parse_source_text(text)
+    alpha_rename(tree)
+    type = resolve(infer_type(tree))
 
-    with open(args.out, "w") as file:
-        pprint(tree, stream=file)
+    print("Type:", type.data)
 
 
 if __name__ == "__main__":

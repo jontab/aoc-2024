@@ -1,4 +1,5 @@
 import sys
+from pprint import pprint
 
 from lark import Tree
 
@@ -24,7 +25,7 @@ def generate_unique_name(want: str) -> str:
     result = want
     suffix = 1
     while result in _seen:
-        result = f"{want}{suffix}"
+        result = f"{want}_{suffix}"
         suffix += 1
 
     _seen.add(result)
@@ -374,7 +375,7 @@ def unify(type1: Tree, type2: Tree) -> None:
     a = resolve(type1)
     b = resolve(type2)
     if a.data == "tvariable":
-        if a != b:
+        if not (b.data == "tvariable" and a.children[0] == b.children[0]):
             if contains(b, a):
                 print(f"pluh: error: attempted recursive unification: {a} in {b}")
                 sys.exit(1)
@@ -386,8 +387,9 @@ def unify(type1: Tree, type2: Tree) -> None:
         return
 
     if a.data == b.data and len(a.children) == len(b.children):
-        for kid1, kid2 in zip(a.children, b.children):
-            unify(kid1, kid2)
+        if a != b:
+            for kid1, kid2 in zip(a.children, b.children):
+                unify(kid1, kid2)
     else:
         print(f"pluh: error: expected {a.data}, got {b.data}")
         sys.exit(1)
@@ -425,3 +427,10 @@ def make_product_type(t1: Tree, t2: Tree) -> Tree:
 
 def make_arrow_type(t1: Tree, t2: Tree) -> Tree:
     return Tree("tarrow", [t1, t2])
+
+
+def reset_type_environment() -> None:
+    global _hm_venv
+    _hm_venv = _standard_library.copy()
+    _hm_tenv.clear()
+    _hm_subs.clear()

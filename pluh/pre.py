@@ -74,7 +74,6 @@ def alpha_rename(
 
             body_tmap = tmap.copy()  # We do not allow recursive non-variant types.
 
-            print(old_name, new_name, body_tmap)
             tmap[old_name] = new_name
 
             # Apply in-place.
@@ -154,13 +153,8 @@ def alpha_rename(
 
         case "lvariable":
             name = node.children[0].value
-            if name not in vmap:
-                if name not in _standard_library:
-                    print("pluh: error: variable is unbound: " + str(name))
-                    sys.exit(1)
-                else:
-                    return
-            node.children[0] = vmap[name]
+            if name in vmap:
+                node.children[0] = vmap[name]
 
         case "tvariable":
             name = node.children[0].value

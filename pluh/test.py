@@ -1,6 +1,7 @@
 import unittest
 
-
+from .anf import normalize
+from .closure import *
 from .grammar import parse_source_text
 from .pre import *
 
@@ -8,6 +9,7 @@ from .pre import *
 class TestTypeInference(unittest.TestCase):
     def get_type_from_source(self, source: str) -> str:
         tree = parse_source_text(source)
+        alpha_rename(tree)
         type = resolve(infer_type(tree))
         return type.data
 
@@ -51,6 +53,25 @@ class TestTypeInference(unittest.TestCase):
     def test_proj(self) -> None:
         source = "(true, 1)[1]"
         self.assertEqual("tint", self.get_type_from_source(source))
+
+
+class TestGetFreeVariables(unittest.TestCase):
+    def get(self, source: str) -> list[str]:
+        tree = parse_source_text(source)
+        tree = simplify_declaration_scopes(tree)
+        return get_free_variables(tree)
+
+    def test_let(self) -> None:
+        source = "let x = 5 in z y x"
+        self.assertListEqual(self.get(source), ["y", "z"])
+
+    def test_match_without_type(self) -> None:
+        source = "match (Int 5) with | Unit -> x | Int of y -> y"
+        self.assertListEqual(self.get(source), ["Int", "Unit", "x"])
+
+    def test_match_with_type(self) -> None:
+        source = "type UnitOrInt = | Unit | Int of int; match (Int 5) with | Unit -> x | Int of y -> y"
+        self.assertListEqual(self.get(source), [])
 
 
 if __name__ == "__main__":

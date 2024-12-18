@@ -1,0 +1,16 @@
+type UnitOrPair =
+    | Unit
+    | Pair of int * int;
+
+def multiplyPairs =
+    fun pair1.
+        fun pair2.
+            (mul pair1[0] pair2[0], mul pair1[1] pair2[1]);
+
+match (Pair (2, 2)) with
+    | Unit -> 0
+    | Pair of pair1 ->
+        (match (Pair (4, 4)) with
+            | Unit -> 0
+            | Pair of pair2 ->
+                (multiplyPairs pair1 pair2)[0]);

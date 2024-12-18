@@ -3,6 +3,7 @@ import sys
 
 from .grammar import parse_source_text
 from .pre import *
+from .anf import *
 
 
 def make_argument_parser() -> argparse.ArgumentParser:
@@ -28,8 +29,10 @@ def main() -> None:
     tree = parse_source_text(text)
     alpha_rename(tree)
     type = resolve(infer_type(tree))
-
     print("Type:", type.data)
+
+    tree = normalize(tree)
+    print_as_code(tree)
 
 
 if __name__ == "__main__":

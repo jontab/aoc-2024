@@ -30,7 +30,7 @@ decl_type_variant_case  : "|" CNAME [ "of" type ]                               
 # Value                                                                        #
 ################################################################################
 
-?value                  : value ( ";" value )+                                            -> seq
+?value                  : "(" value ( ";" value )+ ")"                                    -> seq
                         | "let" [ rec ] CNAME [ ":" type ] "=" value "in" value           -> let
                         | match
 
@@ -58,7 +58,7 @@ match_case              : "|" CNAME [ "of" CNAME ] "->" match                   
                         | ESCAPED_STRING                                                  -> lstr
                         | SIGNED_INT                                                      -> lint
                         | CNAME                                                           -> lvariable
-                        | "(" value ( "," value )+ ")"                                    -> ltuple
+                        | "(" value "," value ")"                                         -> ltuple
                         | "(" ")"                                                         -> lunit
                         | "(" value ")"
 

@@ -109,7 +109,7 @@ class AlphaRenamingInterpreter(Interpreter):
 
 
 def pipeline(text: str) -> N:
-    _logger.info("Alpha-normalizing tree")
+    _logger.info("Alpha-renaming tree")
     tree = prev_pipeline(text)
     AlphaRenamingInterpreter().visit(tree)
     return tree

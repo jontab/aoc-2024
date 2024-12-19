@@ -3,10 +3,9 @@ from dataclasses import dataclass
 from functools import reduce
 from pprint import pprint
 
-from lark import Tree
 from lark.visitors import Interpreter
 
-from .alpha import pipeline as prev_pipeline
+from .alpha import pipeline as alpha_pipeline
 from .repl import repl
 from .syntax import N
 from .unique import generate_unique_name
@@ -34,6 +33,8 @@ class TyVar(MonoType):
     next: MonoType | None = None
 
     def __str__(self) -> str:
+        if self.next is not None:
+            return str(self.next)
         return self.name
 
 
@@ -194,13 +195,13 @@ class TypeInterpreter(Interpreter):
         self.venv = venv if venv is not None else _standard_library_types.copy()
         self.tenv = tenv if tenv is not None else dict()
 
-    def empty_program(self, t: Tree) -> MonoType:
+    def empty_program(self, t: N) -> MonoType:
         return Unit
 
-    def decls(self, t: Tree) -> MonoType:
+    def decls(self, t: N) -> MonoType:
         return self.visit_children(t)[-1]
 
-    def decl_variant(self, t: Tree) -> MonoType:
+    def decl_variant(self, t: N) -> MonoType:
         rec_type = make_rec_type()
         self.tenv[t.children[0]] = rec_type  # E.g., list = R.
 
@@ -220,15 +221,15 @@ class TypeInterpreter(Interpreter):
     # Values
     ##
 
-    def semi(self, t: Tree) -> MonoType:
+    def semi(self, t: N) -> MonoType:
         return self.visit_children(t)[-1]
 
-    def let(self, t: Tree) -> MonoType:
+    def let(self, t: N) -> MonoType:
         value_type = self.visit(t.children[1])
         self.venv[t.children[0]] = generalize(resolve(value_type))
         return self.visit(t.children[2])
 
-    def match(self, t: Tree) -> MonoType:
+    def match(self, t: N) -> MonoType:
         value_type = self.visit(t.children[0])
         branch_type = make_type_variable()
 
@@ -251,17 +252,17 @@ class TypeInterpreter(Interpreter):
 
         return branch_type
 
-    def if_expr(self, t: Tree) -> MonoType:
+    def if_expr(self, t: N) -> MonoType:
         unify(Bool, self.visit(t.children[0]), "if_expr")
         branch_type = self.visit(t.children[1])
         unify(branch_type, self.visit(t.children[2]), "if_expr")
         return branch_type
 
-    def fun(self, t: Tree) -> MonoType:
+    def fun(self, t: N) -> MonoType:
         self.venv[t.children[0]] = make_type_variable()
         return make_fun_type(self.venv[t.children[0]], self.visit(t.children[1]))
 
-    def app(self, t: Tree) -> MonoType:
+    def app(self, t: N) -> MonoType:
         arg_type = self.visit(t.children[1])
         res_type = make_type_variable()
         unify(
@@ -272,58 +273,58 @@ class TypeInterpreter(Interpreter):
 
         return res_type
 
-    def proj_0(self, t: Tree) -> MonoType:
+    def proj_0(self, t: N) -> MonoType:
         value_type = self.visit(t.children[0])
         value_type_want = make_tup_type(make_type_variable(), make_type_variable())
         unify(value_type_want, value_type, "proj_0")
         return value_type_want.args[0]
 
-    def proj_1(self, t: Tree) -> MonoType:
+    def proj_1(self, t: N) -> MonoType:
         value_type = self.visit(t.children[0])
         value_type_want = make_tup_type(make_type_variable(), make_type_variable())
         unify(value_type_want, value_type, "proj_1")
         return value_type_want.args[1]
 
-    def false(self, t: Tree) -> MonoType:
+    def true(self, t: N) -> MonoType:
         return Bool
 
-    def true(self, t: Tree) -> MonoType:
+    def false(self, t: N) -> MonoType:
         return Bool
 
-    def int(self, t: Tree) -> MonoType:
+    def int(self, t: N) -> MonoType:
         return Int
 
-    def var(self, t: Tree) -> MonoType:
+    def var(self, t: N) -> MonoType:
         if t.children[0] not in self.venv:
             raise Exception(f"variable is unbound: {t.children[0]}")
         return instantiate(self.venv[t.children[0]])
 
-    def tup(self, t: Tree) -> MonoType:
+    def tup(self, t: N) -> MonoType:
         return make_tup_type(self.visit(t.children[0]), self.visit(t.children[1]))
 
-    def unit(self, t: Tree) -> MonoType:
+    def unit(self, t: N) -> MonoType:
         return Unit
 
     ##
     # Types
     ##
 
-    def type_fun(self, t: Tree) -> MonoType:
+    def type_fun(self, t: N) -> MonoType:
         return make_fun_type(self.visit(t.children[0]), self.visit(t.children[1]))
 
-    def type_tup(self, t: Tree) -> MonoType:
+    def type_tup(self, t: N) -> MonoType:
         return make_tup_type(self.visit(t.children[0]), self.visit(t.children[1]))
 
-    def type_bool(self, t: Tree) -> MonoType:
+    def type_bool(self, t: N) -> MonoType:
         return Bool
 
-    def type_int(self, t: Tree) -> MonoType:
+    def type_int(self, t: N) -> MonoType:
         return Int
 
-    def type_unit(self, t: Tree) -> MonoType:
+    def type_unit(self, t: N) -> MonoType:
         return Unit
 
-    def type_var(self, t: Tree) -> TyVar:
+    def type_var(self, t: N) -> TyVar:
         if t.children[0] not in self.tenv:
             raise Exception(f"type variable is unbound: {t.children[0]}")
         return self.tenv[t.children[0]]
@@ -332,7 +333,7 @@ class TypeInterpreter(Interpreter):
 def pipeline(text: str) -> N:
     _logger.info("Type-checking program")
     interpreter = TypeInterpreter()
-    tree = prev_pipeline(text)
+    tree = alpha_pipeline(text)
     type = resolve(interpreter.visit(tree))
     return tree
 
@@ -341,7 +342,7 @@ if __name__ == "__main__":
 
     def callback(line: str) -> None:
         interpreter = TypeInterpreter()
-        tree = prev_pipeline(line)
+        tree = alpha_pipeline(line)
         type = resolve(interpreter.visit(tree))
         print(type)
 

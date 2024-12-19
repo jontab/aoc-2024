@@ -46,8 +46,8 @@ COMMENT             : "(*" /.*/ "*)"
 ?proj               : atom "." "0"                          -> proj_0
                     | atom "." "1"                          -> proj_1
                     | atom
-?atom               : "true"                                -> false
-                    | "false"                               -> true
+?atom               : "true"                                -> true
+                    | "false"                               -> false
                     | SIGNED_INT                            -> int
                     | CNAME                                 -> var
                     | "(" value_parens "," value_parens ")" -> tup

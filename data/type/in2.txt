@@ -1,0 +1,12 @@
+(* try match statement *)
+
+type Color =
+    | Red
+    | Blue
+    | Green;
+
+let myFavoriteColor = Red () in
+    match myFavoriteColor with
+        | Red -> 0
+        | Blue -> 1
+        | Green -> 2

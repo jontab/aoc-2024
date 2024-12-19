@@ -1,0 +1,11 @@
+(* try recursive type *)
+
+type IntList = | Leaf | Cons of int * IntList;
+
+let head = fun list -> (match list with
+    | Leaf -> -1
+    | Cons x -> x.0)
+in
+    let myList = Cons (1, Cons (2, Cons (3, Leaf ())))
+    in
+        head myList

@@ -1,1 +1,0 @@
-let rec factorial = fun n. (if iszero n then 1 else mul n (factorial (sub n 1))) in factorial 10

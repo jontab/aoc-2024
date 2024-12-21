@@ -128,7 +128,7 @@ pluh_obj_t pluh_rt_puti(pluh_obj_t o, pluh_env_t *e)
 
 pluh_obj_t pluh_rt_geti(pluh_obj_t o, pluh_env_t *e)
 {
-    int i;
+    int i = 0;
     scanf("%d", &i);
     return (pluh_obj_t)(intptr_t)(i);
 }

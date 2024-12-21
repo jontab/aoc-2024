@@ -1,0 +1,53 @@
+type list =
+    | Leaf
+    | Cons of int * list;
+letrec getTwoListsFromUser = fun unit -> (
+    let list1Num = geti () in
+    let list2Num = geti () in
+    let isNoMoreInput = iszero list1Num in
+    if isNoMoreInput then
+        (Leaf (), Leaf ())
+    else (
+        let recList = getTwoListsFromUser () in
+        let list1 = Cons (list1Num, recList.0) in
+        let list2 = Cons (list2Num, recList.1) in
+        (list1, list2)
+    )
+) in
+letrec countOccurrencesInList = fun list -> fun num -> (
+    match list with
+        | Leaf -> 0
+        | Cons x -> (
+            let head = x.0 in
+            let restOfList = x.1 in
+            let countInRestOfList = countOccurrencesInList restOfList num in
+            if (eqi head num) then
+                addi 1 countInRestOfList
+            else
+                countInRestOfList
+        )
+) in
+letrec map = fun list -> fun callback -> (
+    match list with
+        | Leaf -> Leaf ()
+        | Cons x -> (
+            let head = x.0 in
+            let restOfList = x.1 in
+            Cons (callback head, map restOfList callback)
+        )
+) in
+letrec reduce = fun list -> fun callback -> fun init -> (
+    match list with
+        | Leaf -> init
+        | Cons x -> (
+            let head = x.0 in
+            let restOfList = x.1 in
+            callback head (reduce restOfList callback init)
+        )
+) in
+let twoLists = getTwoListsFromUser () in
+let list1 = twoLists.0 in
+let list2 = twoLists.1 in
+let scores = map list1 (fun elem -> muli elem (countOccurrencesInList list2 elem)) in
+let score = reduce scores addi 0 in
+puti score

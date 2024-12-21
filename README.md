@@ -10,4 +10,4 @@ Advent of Code, 2024, anyone?
 - [x] Add compilation.
   - Added standard library functions.
   - Delegate constructing variant types to `pluh_rt_make_variant` runtime function.
-- [x] Solve problem1.
+- [x] Solve day1.

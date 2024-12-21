@@ -9,12 +9,24 @@ pluh_obj_t divi = NULL;
 pluh_obj_t puti = NULL;
 pluh_obj_t geti = NULL;
 pluh_obj_t iszero = NULL;
+pluh_obj_t gti = NULL;
+pluh_obj_t gei = NULL;
+pluh_obj_t lti = NULL;
+pluh_obj_t lei = NULL;
+pluh_obj_t eqi = NULL;
+pluh_obj_t nei = NULL;
 
 static pluh_obj_t pluh_make_variant_2(pluh_obj_t o, pluh_env_t *e);
 static pluh_obj_t pluh_rt_addi_2(pluh_obj_t o, pluh_env_t *e);
 static pluh_obj_t pluh_rt_subi_2(pluh_obj_t o, pluh_env_t *e);
 static pluh_obj_t pluh_rt_muli_2(pluh_obj_t o, pluh_env_t *e);
 static pluh_obj_t pluh_rt_divi_2(pluh_obj_t o, pluh_env_t *e);
+static pluh_obj_t pluh_rt_gti_2(pluh_obj_t o, pluh_env_t *e);
+static pluh_obj_t pluh_rt_gei_2(pluh_obj_t o, pluh_env_t *e);
+static pluh_obj_t pluh_rt_lti_2(pluh_obj_t o, pluh_env_t *e);
+static pluh_obj_t pluh_rt_lei_2(pluh_obj_t o, pluh_env_t *e);
+static pluh_obj_t pluh_rt_eqi_2(pluh_obj_t o, pluh_env_t *e);
+static pluh_obj_t pluh_rt_nei_2(pluh_obj_t o, pluh_env_t *e);
 
 pluh_closure_t *pluh_closure_create(pluh_obj_t f, int n, ...)
 {
@@ -74,6 +86,12 @@ void pluh_init(void)
     puti = pluh_closure_create((pluh_obj_t)(pluh_rt_puti), 0);
     geti = pluh_closure_create((pluh_obj_t)(pluh_rt_geti), 0);
     iszero = pluh_closure_create((pluh_obj_t)(pluh_rt_iszero), 0);
+    gti = pluh_closure_create((pluh_obj_t)(pluh_rt_gti), 0);
+    gei = pluh_closure_create((pluh_obj_t)(pluh_rt_gei), 0);
+    lti = pluh_closure_create((pluh_obj_t)(pluh_rt_lti), 0);
+    lei = pluh_closure_create((pluh_obj_t)(pluh_rt_lei), 0);
+    eqi = pluh_closure_create((pluh_obj_t)(pluh_rt_eqi), 0);
+    nei = pluh_closure_create((pluh_obj_t)(pluh_rt_nei), 0);
 }
 
 pluh_obj_t pluh_rt_make_variant(pluh_obj_t o, pluh_env_t *e)
@@ -121,6 +139,40 @@ pluh_obj_t pluh_rt_iszero(pluh_obj_t o, pluh_env_t *e)
     return (pluh_obj_t)(intptr_t)(i == 0);
 }
 
+pluh_obj_t pluh_rt_gti(pluh_obj_t o, pluh_env_t *e)
+{
+    return pluh_closure_create((pluh_obj_t)(pluh_rt_gti_2), 1, o);
+}
+
+pluh_obj_t pluh_rt_gei(pluh_obj_t o, pluh_env_t *e)
+{
+    return pluh_closure_create((pluh_obj_t)(pluh_rt_gei_2), 1, o);
+}
+
+pluh_obj_t pluh_rt_lti(pluh_obj_t o, pluh_env_t *e)
+{
+    return pluh_closure_create((pluh_obj_t)(pluh_rt_lti_2), 1, o);
+}
+
+pluh_obj_t pluh_rt_lei(pluh_obj_t o, pluh_env_t *e)
+{
+    return pluh_closure_create((pluh_obj_t)(pluh_rt_lei_2), 1, o);
+}
+
+pluh_obj_t pluh_rt_eqi(pluh_obj_t o, pluh_env_t *e)
+{
+    return pluh_closure_create((pluh_obj_t)(pluh_rt_eqi_2), 1, o);
+}
+
+pluh_obj_t pluh_rt_nei(pluh_obj_t o, pluh_env_t *e)
+{
+    return pluh_closure_create((pluh_obj_t)(pluh_rt_nei_2), 1, o);
+}
+
+//
+// Delegates
+//
+
 pluh_obj_t pluh_make_variant_2(pluh_obj_t o, pluh_env_t *e)
 {
     int type = (int)(intptr_t)(e->data[0]);
@@ -153,4 +205,46 @@ pluh_obj_t pluh_rt_divi_2(pluh_obj_t o, pluh_env_t *e)
     int x = (int)(intptr_t)(e->data[0]);
     int y = (int)(intptr_t)(o);
     return (pluh_obj_t)(intptr_t)(x / y);
+}
+
+pluh_obj_t pluh_rt_gti_2(pluh_obj_t o, pluh_env_t *e)
+{
+    int x = (int)(intptr_t)(e->data[0]);
+    int y = (int)(intptr_t)(o);
+    return (pluh_obj_t)(intptr_t)(x > y);
+}
+
+pluh_obj_t pluh_rt_gei_2(pluh_obj_t o, pluh_env_t *e)
+{
+    int x = (int)(intptr_t)(e->data[0]);
+    int y = (int)(intptr_t)(o);
+    return (pluh_obj_t)(intptr_t)(x >= y);
+}
+
+pluh_obj_t pluh_rt_lti_2(pluh_obj_t o, pluh_env_t *e)
+{
+    int x = (int)(intptr_t)(e->data[0]);
+    int y = (int)(intptr_t)(o);
+    return (pluh_obj_t)(intptr_t)(x < y);
+}
+
+pluh_obj_t pluh_rt_lei_2(pluh_obj_t o, pluh_env_t *e)
+{
+    int x = (int)(intptr_t)(e->data[0]);
+    int y = (int)(intptr_t)(o);
+    return (pluh_obj_t)(intptr_t)(x <= y);
+}
+
+pluh_obj_t pluh_rt_eqi_2(pluh_obj_t o, pluh_env_t *e)
+{
+    int x = (int)(intptr_t)(e->data[0]);
+    int y = (int)(intptr_t)(o);
+    return (pluh_obj_t)(intptr_t)(x == y);
+}
+
+pluh_obj_t pluh_rt_nei_2(pluh_obj_t o, pluh_env_t *e)
+{
+    int x = (int)(intptr_t)(e->data[0]);
+    int y = (int)(intptr_t)(o);
+    return (pluh_obj_t)(intptr_t)(x != y);
 }

@@ -60,6 +60,12 @@ pluh_obj_t      pluh_rt_divi(pluh_obj_t o, pluh_env_t *e);
 pluh_obj_t      pluh_rt_puti(pluh_obj_t o, pluh_env_t *e);
 pluh_obj_t      pluh_rt_geti(pluh_obj_t o, pluh_env_t *e);
 pluh_obj_t      pluh_rt_iszero(pluh_obj_t o, pluh_env_t *e);
+pluh_obj_t      pluh_rt_gti(pluh_obj_t o, pluh_env_t *e);
+pluh_obj_t      pluh_rt_gei(pluh_obj_t o, pluh_env_t *e);
+pluh_obj_t      pluh_rt_lti(pluh_obj_t o, pluh_env_t *e);
+pluh_obj_t      pluh_rt_lei(pluh_obj_t o, pluh_env_t *e);
+pluh_obj_t      pluh_rt_eqi(pluh_obj_t o, pluh_env_t *e);
+pluh_obj_t      pluh_rt_nei(pluh_obj_t o, pluh_env_t *e);
 void            pluh_init(void);
 
 extern pluh_obj_t addi;
@@ -69,5 +75,11 @@ extern pluh_obj_t divi;
 extern pluh_obj_t puti;
 extern pluh_obj_t geti;
 extern pluh_obj_t iszero;
+extern pluh_obj_t gti;
+extern pluh_obj_t gei;
+extern pluh_obj_t lti;
+extern pluh_obj_t lei;
+extern pluh_obj_t eqi;
+extern pluh_obj_t nei;
 
 #endif // PLUH_H

@@ -11,6 +11,7 @@ from .unique import generate_unique_name
 
 FreeVars = list[str]
 
+_debug = False
 
 ##
 # GetFreeVariablesTransformer
@@ -109,6 +110,12 @@ class GetFreeVariablesTransformer(Transformer):
     def closure(self, kids: list[str | FreeVars]) -> FreeVars:
         return kids[1]
 
+    def closure_args(self, kids: list[N]) -> FreeVars:
+        return reduce(_combine_free_vars, kids, [])
+
+    def env(self, _) -> None:
+        assert False
+
 
 ##
 # ClosureTransformer
@@ -144,15 +151,19 @@ class ClosureTransformer(Transformer):
         # 1. Generate a new name for the (currently anonymous) function.
         # 2. Gather the free variables in its body.
         # 3. Transform the references to those free variables in the body to indexes into an "environment".
+        name = generate_unique_name("fun")
         freevars = GetFreeVariablesTransformer().transform(N("fun", kids))
         function = ClosedFun(
-            generate_unique_name("fun"),
+            name,
             str(kids[0]),
             freevars,
             VariableToEnvironmentTransformer(freevars).transform(kids[1]),
         )
         self.funs.append(function)
-        return N("closure", [function.name, freevars])
+        return N(
+            "closure",
+            [function.name, N("closure_args", [N("var", [x]) for x in freevars])],
+        )
 
 
 ##
@@ -174,7 +185,7 @@ class VariantExtractingTransformer(Transformer):
         name = str(kids[0])
         if name in self.constructors:
             variant_index = self.constructors[name]
-            l = N("closure", ["pluh_rt_make_variant", []])
+            l = N("closure", ["pluh_rt_make_variant", N("closure_args", [])])
             r = N("int", [str(variant_index)])
             return N("app", [l, r])
         else:
@@ -191,8 +202,36 @@ class PreCompileInfo:
 def pipeline(text: str) -> PreCompileInfo:
     info = PreCompileInfo(dict(), [], None)
     info.tree = prev_pipeline(text)
+
+    if _debug:
+        print()
+        print("Before extracting variants:")
+        print(info.tree.pretty())
+
     info.tree = VariantExtractingTransformer(info.constructors).transform(info.tree)
+
+    if _debug:
+        print()
+        print("Before transforming closures:")
+        print("Constructors:")
+        pprint(info.constructors)
+
+        print()
+        print("Tree:")
+        print(info.tree.pretty())
+
     info.tree = ClosureTransformer(info.funs).transform(info.tree)
+
+    if _debug:
+        print()
+        print("After transforming closures:")
+        print("Funs:")
+        pprint(info.funs)
+
+        print()
+        print("Tree:")
+        print(info.tree.pretty())
+
     return info
 
 

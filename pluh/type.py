@@ -113,6 +113,12 @@ standard_library_types = {
     "puti": make_fun_type(Int, Unit),
     "geti": make_fun_type(Unit, Int),
     "iszero": make_fun_type(Int, Bool),
+    "gti": make_fun_type(Int, make_fun_type(Int, Bool)),
+    "gei": make_fun_type(Int, make_fun_type(Int, Bool)),
+    "lti": make_fun_type(Int, make_fun_type(Int, Bool)),
+    "lei": make_fun_type(Int, make_fun_type(Int, Bool)),
+    "eqi": make_fun_type(Int, make_fun_type(Int, Bool)),
+    "nei": make_fun_type(Int, make_fun_type(Int, Bool)),
 }
 
 ##

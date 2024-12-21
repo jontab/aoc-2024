@@ -1,0 +1,81 @@
+type list =
+    | Leaf
+    | Cons of int * list;
+
+letrec insertIntoIncreasingList = fun list -> (fun num -> (
+    match list with
+        | Leaf -> Cons (num, Leaf ())
+        | Cons x -> (
+            let head = x.0 in
+            let restOfList = x.1 in
+
+            if (lti num head) then (
+                Cons (num, Cons (head, restOfList))
+            ) else (
+                Cons (head, insertIntoIncreasingList restOfList num)
+            )
+        )
+))
+in
+
+letrec buildTwoListsFromUser = fun unit -> (
+    let list1Num = geti () in
+    let list2Num = geti () in
+    if (iszero list1Num) then (
+        (* Lists are initially empty. *)
+        (Leaf (), Leaf ())
+    ) else (
+        let recursiveList = buildTwoListsFromUser () in
+        let list1 = (insertIntoIncreasingList recursiveList.0 list1Num) in
+        let list2 = (insertIntoIncreasingList recursiveList.1 list2Num) in
+        (list1, list2)
+    )
+)
+in
+
+letrec printList = fun list -> (
+    match list with
+        | Leaf -> ()
+        | Cons x -> (
+            puti x.0; printList x.1
+        )
+)
+in
+
+let getAbsoluteValue = fun value -> (
+    if (lti value 0) then
+        (muli value -1)
+    else
+        value
+)
+in
+
+letrec makeDifferenceList = fun list1 -> (fun list2 -> (
+    match list1 with
+        | Leaf -> Leaf ()
+        | Cons innerList1 -> (
+            match list2 with
+                | Leaf -> Leaf ()
+                | Cons innerList2 -> (
+                    let headDiff = (subi innerList1.0 innerList2.0) in
+                    let absDiff = (getAbsoluteValue headDiff) in
+                    let restOfList = (makeDifferenceList innerList1.1 innerList2.1) in
+                    Cons (absDiff, restOfList)
+                )
+        )
+))
+in
+
+letrec listSum = fun list -> (
+    match list with
+        | Leaf -> 0
+        | Cons innerList -> addi innerList.0 (listSum innerList.1)
+)
+in
+
+let twoLists = buildTwoListsFromUser () in
+let list1 = twoLists.0 in
+let list2 = twoLists.1 in
+let diffList = (makeDifferenceList list1 list2) in
+let totalDiffSum = (listSum diffList) in
+puti totalDiffSum

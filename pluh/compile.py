@@ -55,35 +55,44 @@ def _compile_letrec(t: N, then: Callable[[str], None]) -> None:
     #    after the closure is created.
     _write(f"    {ObjType} {let_name} = ", end="")
 
-    function_name, freevars = let_value.children
+    function_name, closureargs = let_value.children
     _write(f"pluh_closure_create(({ObjType})({function_name})", end="")
-    _write(f", {len(freevars)}", end="")
-    arg_names = ["NULL" if x == let_name else x for x in freevars]
-    if arg_names:
-        _write(f", {', '.join(arg_names)}", end="")
+    _write(f", {len(closureargs.children)}", end="")
+
+    args = []
+    for expr in closureargs.children:
+        _compile_node(expr, lambda x: args.append(x))
+
+    if args:
+        _write(f", {', '.join(args)}", end="")
     _write(f");")
 
     # 2. Now, if the closure wants a reference to itself, we can inject it into the environment.
-    if let_name in freevars:
-        let_name_ix = freevars.index(let_name)
-        _write(f"    ((pluh_closure_t *)({let_name}))", end="")
-        _write(f"->e.data[{let_name_ix}] = {let_name};")
+    for i, expr in enumerate(closureargs.children):
+        if expr.data == "var" and let_name == str(expr.children[0]):
+            _write(f"    ((pluh_closure_t *)({let_name}))", end="")
+            _write(f"->e.data[{i}] = {let_name};")
 
     # 3. Next, we compile the body as normal.
     _compile_node(let_body, then)
 
 
 def _compile_closure(t: N, then: Callable[[str], None]) -> None:
-    function_name, freevars = t.children
+    function_name, closureargs = t.children
     name = generate_unique_name("closure")
 
     _write(f"")
     _write(f"    {ObjType} {name} = ", end="")
 
     _write(f"pluh_closure_create(({ObjType})({function_name})", end="")
-    _write(f", {len(freevars)}", end="")
-    if freevars:
-        _write(f", {', '.join(freevars)}")
+    _write(f", {len(closureargs.children)}", end="")
+
+    args = []
+    for expr in closureargs.children:
+        _compile_node(expr, lambda x: args.append(x))
+
+    if args:
+        _write(f", {', '.join(args)}", end="")
     _write(f");")
 
     then(name)

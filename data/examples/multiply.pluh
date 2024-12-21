@@ -1,0 +1,3 @@
+let userInput1 = geti () in
+let userInput2 = geti () in
+puti (muli userInput1 userInput2)

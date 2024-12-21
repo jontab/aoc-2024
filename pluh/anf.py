@@ -55,11 +55,11 @@ def normalize(t: N, cont: Callable[[N], N]) -> N:
 
             return normalize_name(t.children[0], after_normalize_left)
 
-        case "let":
+        case "let" | "letrec":
             name, value, body = t.children
 
             def after_normalize_value(n1: N) -> N:
-                return N("let", [name, n1, normalize(body, cont)])
+                return N(t.data, [name, n1, normalize(body, cont)])
 
             return normalize(value, after_normalize_value)
 
@@ -97,8 +97,7 @@ def normalize(t: N, cont: Callable[[N], N]) -> N:
             return normalize_name(t.children[0], after_normalize_tuple)
 
         case _:
-            if not is_term_atomic(t):
-                raise Exception(f"unhandled node: {t.data}")
+            assert is_term_atomic(t), f"unhandled node: {t.data}"
             return cont(t)
 
 

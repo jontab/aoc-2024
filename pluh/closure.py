@@ -64,6 +64,13 @@ class GetFreeVariablesTransformer(Transformer):
         ret = _combine_free_vars(ret, value_vars)
         return ret
 
+    def letrec(self, kids: list[str | FreeVars]) -> FreeVars:
+        name, value_vars, body_vars = kids
+        body_vars = _remove_from_free_vars(str(name), body_vars)
+        value_vars = _remove_from_free_vars(str(name), value_vars)
+        ret = _combine_free_vars(value_vars, body_vars)
+        return ret
+
     def match(self, kids: list[str | N | FreeVars]) -> FreeVars:
         value_vars, cases = kids[0], kids[1].children
         return reduce(_combine_free_vars, cases, value_vars)
@@ -71,7 +78,6 @@ class GetFreeVariablesTransformer(Transformer):
     def match_case(self, kids: list[str | FreeVars]) -> FreeVars:
         constructor_name, bind_name, body_vars = kids
         ret = _remove_from_free_vars(str(bind_name), body_vars)
-        ret = _combine_free_vars(ret, [str(constructor_name)])
         return ret
 
     def fun(self, kids: list[str | FreeVars]) -> FreeVars:
@@ -113,6 +119,7 @@ class GetFreeVariablesTransformer(Transformer):
 class ClosedFun:
     name: str
     arg: str
+    freevars: FreeVars
     body: N
 
 
@@ -141,6 +148,7 @@ class ClosureTransformer(Transformer):
         function = ClosedFun(
             generate_unique_name("fun"),
             str(kids[0]),
+            freevars,
             VariableToEnvironmentTransformer(freevars).transform(kids[1]),
         )
         self.funs.append(function)
@@ -165,9 +173,8 @@ class VariantExtractingTransformer(Transformer):
     def var(self, kids: list[N]) -> N:
         name = str(kids[0])
         if name in self.constructors:
-            # 1. If we encounter a constructor, let's de-sugar it to call a function called "mkVariant".
             variant_index = self.constructors[name]
-            l = N("closure", ["mkVariant", []])
+            l = N("closure", ["pluh_rt_make_variant", []])
             r = N("int", [str(variant_index)])
             return N("app", [l, r])
         else:
@@ -184,8 +191,8 @@ class PreCompileInfo:
 def pipeline(text: str) -> PreCompileInfo:
     info = PreCompileInfo(dict(), [], None)
     info.tree = prev_pipeline(text)
-    info.tree = ClosureTransformer(info.funs).transform(info.tree)
     info.tree = VariantExtractingTransformer(info.constructors).transform(info.tree)
+    info.tree = ClosureTransformer(info.funs).transform(info.tree)
     return info
 
 

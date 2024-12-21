@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from lark import Lark, Transformer, Tree
 
@@ -33,7 +34,8 @@ COMMENT             : "(*" /.*/ "*)"
 
 ?value_parens       : value ";" value_parens                -> semi
                     | value
-?value              : "let" CNAME "=" value "in" value      -> let
+?value              : "let"    CNAME "=" value "in" value   -> let
+                    | "letrec" CNAME "=" value "in" value   -> letrec
                     | match
 ?match              : "match" match "with" match_cases      -> match
                     | fun
@@ -91,7 +93,11 @@ class NTransformer(Transformer):
 
 
 def _parse_text(text: str) -> Lark:
-    return Lark(GRAMMAR).parse(text)
+    try:
+        return Lark(GRAMMAR).parse(text)
+    except Exception as e:
+        print(f"pluh: error: {e}")
+        sys.exit(1)
 
 
 def pipeline(text: str) -> Tree:

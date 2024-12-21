@@ -1,0 +1,3 @@
+letrec factorial = fun x -> if iszero x then 1 else muli x (factorial (subi x 1)) in
+    let userInput = geti () in
+        puti (factorial userInput)

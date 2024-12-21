@@ -44,6 +44,20 @@ class AlphaRenamingInterpreter(Interpreter):
         self.visit(t.children[1])
         AlphaRenamingInterpreter(body_mapping, self.tenv).visit(t.children[2])
 
+    def letrec(self, t: N) -> None:
+        old_name = t.children[0]
+        new_name = generate_unique_name(old_name)
+
+        ## Update node in-place.
+        t.children[0] = new_name
+
+        ## Update mappings (create new).
+        value_mapping = self.venv | {old_name: new_name}
+        body_mapping = self.venv | {old_name: new_name}
+
+        AlphaRenamingInterpreter(value_mapping, self.tenv).visit(t.children[1])
+        AlphaRenamingInterpreter(body_mapping, self.tenv).visit(t.children[2])
+
     def fun(self, t: N) -> None:
         old_name = t.children[0]
         new_name = generate_unique_name(old_name)

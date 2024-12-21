@@ -1,4 +1,5 @@
 import logging
+import sys
 from dataclasses import dataclass
 from functools import reduce
 from pprint import pprint
@@ -112,10 +113,6 @@ standard_library_types = {
     "puti": make_fun_type(Int, Unit),
     "geti": make_fun_type(Unit, Int),
     "iszero": make_fun_type(Int, Bool),
-    "fix": ForAll(
-        {"S1"},
-        make_fun_type(make_fun_type(TyVar("S1"), TyVar("S1")), TyVar("S1")),
-    ),
 }
 
 ##
@@ -192,7 +189,7 @@ class TypeInterpreter(Interpreter):
         venv: dict[str, MonoType | ForAll] | None = None,
         tenv: dict[str, MonoType] | None = None,
     ):
-        self.venv = venv if venv is not None else _standard_library_types.copy()
+        self.venv = venv if venv is not None else standard_library_types.copy()
         self.tenv = tenv if tenv is not None else dict()
 
     def empty_program(self, t: N) -> MonoType:
@@ -227,6 +224,16 @@ class TypeInterpreter(Interpreter):
     def let(self, t: N) -> MonoType:
         value_type = self.visit(t.children[1])
         self.venv[t.children[0]] = generalize(resolve(value_type))
+        return self.visit(t.children[2])
+
+    def letrec(self, t: N) -> MonoType:
+        # 1. Fun fact: we don't use generalize here because that would introduce polymorphic recursion. Polymorphic
+        #    recursion is not decidable in the general case.
+        # 2. For simplicity in compilation, we enforce that the value is a function-type.
+        new_type = make_fun_type(make_type_variable(), make_type_variable())
+        self.venv[t.children[0]] = new_type
+        value_type = self.visit(t.children[1])
+        unify(new_type, value_type, "letrec")
         return self.visit(t.children[2])
 
     def match(self, t: N) -> MonoType:
@@ -334,10 +341,16 @@ def pipeline(text: str) -> N:
     _logger.info("Type-checking program")
     interpreter = TypeInterpreter()
     tree = alpha_pipeline(text)
-    type = resolve(interpreter.visit(tree))
+    try:
+        type = resolve(interpreter.visit(tree))
+    except Exception as e:
+        print(f"pluh: error: {e}")
+        sys.exit(1)
 
     if not isinstance(type, TyCon) or type.name not in ["int", "unit"]:
-        raise Exception(f"program must evaluate to int or unit type, got: {type.name}")
+        msg = f"program must evaluate to int or unit type, got: {type.name}"
+        print(msg)
+        sys.exit(1)
 
     return tree
 

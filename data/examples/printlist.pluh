@@ -1,0 +1,17 @@
+type list =
+    | Leaf
+    | Cons of int * list;
+
+letrec makeUserList = fun unit ->
+    (let userInput = geti () in
+        if iszero userInput
+            then Leaf ()
+            else Cons (userInput, makeUserList ()))
+in
+
+    letrec printList = fun list ->
+        (match list with
+            | Leaf -> ()
+            | Cons x -> (puti x.0; printList x.1))
+    in
+        printList (makeUserList ())

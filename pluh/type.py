@@ -104,7 +104,7 @@ def resolve(t: MonoType) -> MonoType:
 
 _debug = False
 _logger = logging.getLogger(__name__)
-_standard_library_types = {
+standard_library_types = {
     "addi": make_fun_type(Int, make_fun_type(Int, Int)),
     "subi": make_fun_type(Int, make_fun_type(Int, Int)),
     "muli": make_fun_type(Int, make_fun_type(Int, Int)),
@@ -335,6 +335,10 @@ def pipeline(text: str) -> N:
     interpreter = TypeInterpreter()
     tree = alpha_pipeline(text)
     type = resolve(interpreter.visit(tree))
+
+    if not isinstance(type, TyCon) or type.name not in ["int", "unit"]:
+        raise Exception(f"program must evaluate to int or unit type, got: {type.name}")
+
     return tree
 
 
@@ -356,7 +360,7 @@ if __name__ == "__main__":
     def intro() -> None:
         print("Type 'p' to show environments and substitution map.")
         print("The following variables are available in your environment.")
-        for name, type in _standard_library_types.items():
+        for name, type in standard_library_types.items():
             print(f"{name:8s}: {type}")
 
     intro()

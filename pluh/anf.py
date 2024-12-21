@@ -92,7 +92,6 @@ def normalize(t: N, cont: Callable[[N], N]) -> N:
         case "proj_0" | "proj_1":
 
             def after_normalize_tuple(n1: N) -> N:
-                print(t, t.children)
                 return cont(N(t.data, [n1]))
 
             return normalize_name(t.children[0], after_normalize_tuple)

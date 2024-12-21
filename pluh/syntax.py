@@ -1,6 +1,6 @@
 import logging
 
-from lark import Lark, Token, Transformer, Tree
+from lark import Lark, Transformer, Tree
 
 _logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ COMMENT             : "(*" /.*/ "*)"
 # Declarations
 ##
 
-?decls              : decl ( ";" decls )*                   -> decls
+?decls              : decl ( ";" decl )*                    -> decls
 ?decl               : decl_variant
                     | value
 ?decl_variant       : "type" CNAME "=" decl_variant_cases   -> decl_variant
